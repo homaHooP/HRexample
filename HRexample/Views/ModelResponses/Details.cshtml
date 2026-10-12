@@ -1,0 +1,338 @@
+@using HRexample.Models
+@model Application
+
+@{
+    ViewData["Title"] = "Огляд ШІ — " + Model.Name;
+    var review = Model.ModelResponse;
+    var fitClass = review == null ? "" :
+        review.PercentageFitForJob >= 75 ? "fit-high" :
+        review.PercentageFitForJob >= 50 ? "fit-mid" : "fit-low";
+}
+
+<div class="review-page">
+    <div class="review-card">
+
+        <a asp-action="Index" class="back-link">← До всіх заявок</a>
+
+        <div class="page-header">
+            <h1>@Model.Name</h1>
+            <p>
+                @(Model.JobRequirement?.Position ?? "Без позиції") ·
+                @Model.Email ·
+                подано @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+            </p>
+        </div>
+
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success">@success</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-error">@error</div>
+        }
+
+        @if (review == null)
+        {
+            <div class="empty-state">
+                <h2>Огляду ще немає</h2>
+                <p>ШІ проаналізує резюме кандидата та оцінить його відповідність вакансії.</p>
+            </div>
+        }
+        else
+        {
+            <div class="fit-block">
+                <div class="fit-label">Відповідність вакансії</div>
+                <div class="fit-value @fitClass">@review.PercentageFitForJob%</div>
+                <div class="fit-bar"><div class="fit-bar-fill @fitClass" style="width:@(review.PercentageFitForJob)%"></div></div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Ім'я з резюме</div>
+                    <div class="info-value">@($"{review.Name} {review.Surname}".Trim())</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Освіта</div>
+                    <div class="info-value">@(string.IsNullOrWhiteSpace(review.Education) ? "—" : review.Education)</div>
+                </div>
+
+                <div class="info-item info-item-wide">
+                    <div class="info-label">Досвід</div>
+                    <div class="info-value">@(string.IsNullOrWhiteSpace(review.Experience) ? "—" : review.Experience)</div>
+                </div>
+
+                <div class="info-item info-item-wide">
+                    <div class="info-label">Навички</div>
+                    @if (review.skills.Any())
+                    {
+                        <div class="skills">
+                            @foreach (var skill in review.skills)
+                            {
+                                <span class="skill-chip">@skill</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="info-value">—</div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="resumeBtn"
+                    data-url="@Url.Action("GetResumeLink", "Applications", new { id = Model.Id })">
+                Відкрити резюме
+            </button>
+
+            <form asp-action="Analyze" asp-route-applicationId="@Model.Id" method="post" id="analyzeForm">
+                <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                    @(review == null ? "Запросити огляд ШІ" : "Повторити огляд")
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .review-page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .review-card {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 14px;
+        padding: 32px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 18px;
+        font-size: 14px;
+        color: #0d6efd;
+        text-decoration: none;
+    }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+    .page-header {
+        margin-bottom: 30px;
+    }
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
+            color: #222;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #777;
+        }
+
+    .alert {
+        margin-bottom: 20px;
+        padding: 12px 14px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    .alert-success {
+        color: #1b7a43;
+        background: #e9f7ef;
+        border: 1px solid #c3e8d1;
+    }
+
+    .alert-error {
+        color: #d63333;
+        background: #fdeeee;
+        border: 1px solid #f5c6c6;
+    }
+
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        border: 1px dashed #d8d8d8;
+        border-radius: 10px;
+    }
+
+        .empty-state h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .empty-state p {
+            margin: 0;
+            color: #777;
+        }
+
+    .fit-block {
+        margin-bottom: 28px;
+        padding: 20px;
+        background: #f8f9fb;
+        border-radius: 10px;
+    }
+
+    .fit-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .fit-value {
+        margin: 4px 0 12px;
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.1;
+        background: none !important;
+    }
+
+    .fit-bar {
+        height: 8px;
+        background: #e5e5e5;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .fit-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+    }
+
+    .fit-high { background: #1f9d55; color: #1f9d55; }
+    .fit-mid { background: #e0a100; color: #b88400; }
+    .fit-low { background: #d63333; color: #d63333; }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .info-item-wide {
+        grid-column: 1 / -1;
+    }
+
+    .info-label {
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .info-value {
+        font-size: 15px;
+        line-height: 1.55;
+        color: #444;
+        white-space: pre-line;
+    }
+
+    .skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .skill-chip {
+        padding: 5px 12px;
+        font-size: 13px;
+        color: #0b5ed7;
+        background: #eef4ff;
+        border: 1px solid #d6e4ff;
+        border-radius: 999px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+        .form-actions form {
+            margin: 0;
+        }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+    .btn-primary {
+        background: #0d6efd;
+        color: white;
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0b5ed7;
+        }
+
+    .btn-secondary {
+        background: #f1f3f5;
+        color: #333;
+    }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e2e6ea;
+        }
+
+    @@media (max-width: 600px) {
+        .review-card { padding: 20px; }
+        .info-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Блокує кнопку, поки ШІ аналізує резюме
+        document.getElementById('analyzeForm').addEventListener('submit', function () {
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.textContent = 'Аналізуємо резюме…';
+        });
+
+        // Отримує тимчасове посилання на PDF і відкриває його
+        document.getElementById('resumeBtn').addEventListener('click', async function () {
+            const btn = this;
+            const tab = window.open('', '_blank');
+            btn.disabled = true;
+            try {
+                const res = await fetch(btn.dataset.url);
+                if (!res.ok) throw new Error();
+                const { url } = await res.json();
+                tab.location = url;
+            } catch {
+                tab.close();
+                alert('Не вдалося відкрити резюме.');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+}

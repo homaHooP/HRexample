@@ -1,5 +1,5 @@
-@using HRexample.Models;
-@model IEnumerable<JobRequirement>;
+@using HRexample.Models
+@model IEnumerable<JobRequirement>
 
 @{
     ViewData["Title"] = "Вимоги до вакансій";
@@ -9,19 +9,19 @@
 
     <div class="page-header">
         <div>
-            <h1>Мінімальні вимоги до кандидатів</h1>
+            <h1>Посади</h1>
             <p class="subtitle">Перелік позицій та вимог до кандидатів</p>
         </div>
 
         <a class="btn btn-primary" asp-action="Create">
-            + Додати збірку вимог
+            + Додати посаду
         </a>
     </div>
 
     @if (Model == null || !Model.Any())
     {
         <div class="empty-state">
-            <h3>Поки що жодних вимог не додано</h3>
+            <h3>Поки що жодних посад не додано</h3>
         </div>
     }
     else
@@ -32,25 +32,21 @@
                 <div class="requirement-card">
 
                     <div class="card-content">
-                        <h2>@requirement.Name</h2>
-
-                        <div class="skills">
-                            <h4>Вимоги:</h4>
-                            <p>@requirement.RequiredSkills</p>
-                        </div>
+                        <h2>@requirement.Position</h2>
                     </div>
 
                     <div class="card-actions">
                         <a class="btn btn-edit"
-                           asp-action="Edit"
-                           asp-route-id="@requirement.Id">
-                            Редагувати
+                           asp-action="Create"
+                           asp-controller="Applications"
+                           asp-route-positionId="@requirement.Id">
+                           Подати заявку
                         </a>
 
                         <a class="btn btn-delete"
-                           asp-action="Delete"
-                           asp-route-id="@requirement.Id">
-                            Видалити
+                           asp-controller="ModelResponses"
+                           asp-action="Index">
+                           Звіт
                         </a>
                     </div>
 

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.103.4" />
+    <PackageReference Include="Google.GenAI" Version="1.25.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.31" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31">
       <PrivateAssets>all</PrivateAssets>
@@ -19,6 +20,16 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\ModelResponses\" />
+  </ItemGroup>
+
+  <!-- Налаштування nginx для Elastic Beanstalk (ліміт розміру завантажень) -->
+  <ItemGroup>
+    <None Include=".platform\**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -1,30 +1,44 @@
 ﻿using HRexample.Data;
+using HRexample.Models;
 using HRexample.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HRexample.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace HRexample.Controllers
 {
-    public class ApplicationsController(AppDbContext _context, bucketService _bs) : Controller
+    public class ApplicationsController(AppDbContext _db, bucketService _bs) : Controller
     {
 
         public async Task<IActionResult> Index()
         {
-            var applications = await _context.Applications.ToListAsync();
+            var applications = await _db.Applications.Include(x=>x.JobRequirement).Include(x=>x.ModelResponse).OrderBy(a=>a.JobRequirement.Position).ThenBy(x=>x.CreatedAt).ToListAsync();
             return View(applications);
         }
 
-        [HttpGet]
-        public IActionResult Create()
+        [HttpGet("apply/{positionId}")]
+        public async Task<IActionResult> Create([FromRoute] Guid positionId)
         {
-            return View();
+            var jobRequirement = await _db.JobRequirements.FindAsync(positionId);
+            if (jobRequirement == null)
+            {
+                return NotFound();
+            }
+            var application = new Application
+            {
+                JobRequirementId = jobRequirement.Id
+            };
+            return View(application);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Application application, IFormFile? resumeFile)
+        [HttpPost("apply/{positionId}")]
+        public async Task<IActionResult> Create([FromRoute] Guid positionId, Application application, IFormFile? resumeFile)
         {
+            var jobRequirement = await _db.JobRequirements.FindAsync(positionId);
+            if (jobRequirement == null)
+            {
+                return NotFound();
+            }
             if (resumeFile == null || resumeFile.Length == 0)
             {
                 ModelState.AddModelError("resumeFile", "Будь ласка, прикріпіть файл резюме.");
@@ -36,32 +50,32 @@ namespace HRexample.Controllers
                 {
                     ModelState.AddModelError("resumeFile", "Дозволено завантажувати лише файли у форматі PDF.");
                 }
-
-                const long maxSizeBytes = 5 * 1024 * 1024; 
+                const long maxSizeBytes = 5 * 1024 * 1024;
                 if (resumeFile.Length > maxSizeBytes)
                 {
                     ModelState.AddModelError("resumeFile", "Розмір файлу не повинен перевищувати 5 МБ.");
                 }
             }
-
             if (!ModelState.IsValid)
             {
                 return View(application);
             }
+            var key = $"app/{application.Id}.pdf";
 
             await using var stream = resumeFile!.OpenReadStream();
-            await _bs.UploadObjectAsync(application.s3FileKey, stream, "application/pdf");
+            await _bs.UploadObjectAsync(key, stream, "application/pdf");
 
-            _context.Applications.Add(application);
-            await _context.SaveChangesAsync();
-
+            application.s3FileKey = key;
+            application.JobRequirementId = jobRequirement.Id;
+            await _db.Applications.AddAsync(application);
+            await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            var application = await _context.Applications.FindAsync(id);
+            var application = await _db.Applications.FindAsync(id);
             if (application == null)
                 return NotFound();
 
@@ -71,7 +85,7 @@ namespace HRexample.Controllers
         [HttpGet]
         public async Task<IActionResult> GetResumeLink(Guid id)
         {
-            var application = await _context.Applications.FindAsync(id);
+            var application = await _db.Applications.FindAsync(id);
             if (application == null)
                 return NotFound();
 

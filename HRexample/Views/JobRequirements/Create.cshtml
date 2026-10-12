@@ -7,26 +7,25 @@
 
 <div class="create-page">
 
-    ```
     <div class="create-card">
 
         <div class="page-header">
             <p>Вкажіть вимоги до кандидата.</p>
         </div>
-
-        <form asp-action="Create" method="post">
+         
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
             <div class="form-group">
-                <label asp-for="Name">Ім'я файлу</label>
-                <input asp-for="Name" class="form-control" placeholder="Наприклад: вимоги_до_кандидата" />
-                <span asp-validation-for="Name" class="validation-message"></span>
+                <label asp-for="Position">Посада</label>
+                <input asp-for="Position" class="form-control" placeholder="Наприклад: senior backend developer" />
+                <span asp-validation-for="Position" class="validation-message"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="RequiredSkills">Вимоги</label>
-                <textarea asp-for="RequiredSkills" class="form-control textarea" placeholder="Наприклад: знання React, JavaScript, Git..." rows="6"></textarea>
-                <span asp-validation-for="RequiredSkills" class="validation-message"></span>
+                <label for="requirementFile">Вимоги до посади (TXT)</label>
+                <input type="file" id="requirementFile" name="requirementFile" class="form-control" accept="text/plain" />
+                <span class="validation-message" id="fileError"></span>
             </div>
 
             <div class="form-actions">
@@ -36,7 +35,6 @@
         </form>
 
     </div>
-    ```
 
 </div>
 

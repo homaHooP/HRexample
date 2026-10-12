@@ -1,20 +1,41 @@
-﻿using System;
+﻿using Amazon.S3;
+using Amazon.S3.Model;    
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.S3;
-using Amazon.S3.Model;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 
 namespace HRexample.Services
 {
     public class bucketService(IAmazonS3 s3, string bucketName)
     {
-        public async Task<List<S3Object>> ListObjectsAsync()
+        private async Task<MemoryStream> DownloadAsync(string key)
         {
-            var response = await s3.ListObjectsV2Async(new ListObjectsV2Request { BucketName = bucketName });
-            var objects = response.S3Objects ?? new List<S3Object>();
-            return objects;
+            using var response = await s3.GetObjectAsync(bucketName, key);
+            var ms = new MemoryStream();
+            await response.ResponseStream.CopyToAsync(ms);
+            ms.Position = 0;
+            return ms;
+        }
+        public async Task<string> ReadPdfTextAsync(string key)
+        {
+            using var ms = await DownloadAsync(key);
+            using var pdf = PdfDocument.Open(ms);
+
+            var sb = new StringBuilder();
+            foreach (Page page in pdf.GetPages())
+                sb.AppendLine(page.Text);
+
+            return sb.ToString();
+        }
+        public async Task<string> ReadTextAsync(string key)
+        {
+            await using var stream = await DownloadAsync(key);
+            using var reader = new StreamReader(stream);
+            return await reader.ReadToEndAsync();
         }
         public async Task UploadObjectAsync(string key, Stream content, string? contentType = null)
         {
@@ -26,15 +47,6 @@ namespace HRexample.Services
                 ContentType = contentType ?? "application/octet-stream",
             };
             await s3.PutObjectAsync(request);
-        }
-        public async Task DownloadObjectAsync(string key, string destinationPath)
-        {
-            var response = await s3.GetObjectAsync(new GetObjectRequest { BucketName = bucketName, Key = key });
-            await response.WriteResponseStreamToFileAsync(destinationPath, false, default);
-        }
-        public async Task DeleteObjectAsync(string key)
-        {
-            await s3.DeleteObjectAsync(new DeleteObjectRequest { BucketName = bucketName, Key = key });
         }
         public async Task<string> GenerateLinkAsync(string key)
         {

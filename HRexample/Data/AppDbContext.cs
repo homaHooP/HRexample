@@ -10,5 +10,6 @@ namespace HRexample.Data
         }
         public DbSet<JobRequirement> JobRequirements { get; set; } = null!;
         public DbSet<Application> Applications { get; set; } = null!;
+        public DbSet<ModelResponse> ModelResponses { get; set; } = null!;
     }
 }

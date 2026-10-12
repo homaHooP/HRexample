@@ -33,8 +33,14 @@ namespace HRexample.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("JobRequirementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModelResponseId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -48,6 +54,10 @@ namespace HRexample.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("JobRequirementId");
+
+                    b.HasIndex("ModelResponseId");
+
                     b.ToTable("Applications");
                 });
 
@@ -60,19 +70,69 @@ namespace HRexample.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Position")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("RequiredSkills")
+                    b.Property<string>("s3FileKey")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("JobRequirements");
+                });
+
+            modelBuilder.Entity("HRexample.Models.ModelResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Education")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Experience")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PercentageFitForJob")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("skills")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ModelResponses");
+                });
+
+            modelBuilder.Entity("HRexample.Models.Application", b =>
+                {
+                    b.HasOne("HRexample.Models.JobRequirement", "JobRequirement")
+                        .WithMany()
+                        .HasForeignKey("JobRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRexample.Models.ModelResponse", "ModelResponse")
+                        .WithMany()
+                        .HasForeignKey("ModelResponseId");
+
+                    b.Navigation("JobRequirement");
+
+                    b.Navigation("ModelResponse");
                 });
 #pragma warning restore 612, 618
         }

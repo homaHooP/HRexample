@@ -7,16 +7,11 @@ namespace HRexample.Models
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [Required(ErrorMessage = "Вкажіть ім'я файла")]
+        [Required(ErrorMessage = "Вкажіть посаду")]
         [StringLength(500)]
-        [Display(Name = "Ім'я")]
-        public string Name { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Вкажіть вимоги для посади")]
-        [StringLength(500)]
-        [Display(Name = "Вимоги")]
-        public string RequiredSkills { get; set; } = string.Empty;
-
+        [Display(Name = "Посада")]
+        public string Position { get; set; } = string.Empty;
+        public string s3FileKey { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

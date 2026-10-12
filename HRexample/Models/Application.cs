@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRexample.Models
 {
@@ -14,13 +16,22 @@ namespace HRexample.Models
 
         [Required(ErrorMessage = "Вкажіть свою email")]
         [EmailAddress(ErrorMessage = "Вкажіть коректну email адресу")]
-        [StringLength(20)]
+        [StringLength(50)]
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
         [StringLength(100)]
-        public string s3FileKey { get; set; } = $"{Guid.NewGuid()}";
+        public string s3FileKey { get; set; } = string.Empty;
 
+        [ForeignKey("JobRequirement")]
+        public Guid JobRequirementId { get; set; }
+        [ValidateNever]
+        public JobRequirement JobRequirement { get; set; } 
+
+        [ForeignKey("ModelResponse")]
+        public Guid? ModelResponseId { get; set; }
+        [ValidateNever]
+        public ModelResponse? ModelResponse { get; set; } 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

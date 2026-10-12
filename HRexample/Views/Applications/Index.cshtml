@@ -29,10 +29,9 @@
 
                     <div class="card-content">
                         <h2>@application.Name</h2>
-
+                        <h4>@application.JobRequirement.Position</h4>
                         <div class="skills">
-                            <h4>Email:</h4>
-                            <p>@application.Email</p>
+                            <h4>Email: @application.Email</h4>
                             <p>@application.CreatedAt.ToString("dd.MM.yyyy")</p>
                         </div>
                     </div>
@@ -44,7 +43,15 @@
                             Переглянути резюме
                         </button>
                     </div>
-
+                    <div class="card-actions">
+                        <a type="button"
+                                class="btn btn-details"
+                                asp-controller="ModelResponses"
+                                asp-action="Details"
+                                asp-route-applicationId="@application.Id">
+                            Огляд ШІ
+                        </a>
+                    </div>
                 </div>
             }
         </div>
